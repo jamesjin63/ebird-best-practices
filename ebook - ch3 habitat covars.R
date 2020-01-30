@@ -14,6 +14,7 @@ library(raster)
 library(MODIS)
 library(velox)
 library(viridis)
+library(gdalUtils)
 library(tidyverse)
 
 # Load downloaded ebird data
@@ -80,13 +81,13 @@ Sys.getenv("PATH")
 
 
 # Let's try resetting paths
-MODISoptions(localArcPath = "/Users/Michelle 1/Documents/Documents/MODIS/Downloads",
-             outDirPath = "/Users/Michelle 1/Documents/R projects/ebird best practices/data")
+# MODISoptions(localArcPath = "/Users/Michelle 1/Documents/Documents/MODIS/Downloads",
+#              outDirPath = "/Users/Michelle 1/Documents/R projects/ebird best practices/data")
         #Changing this because the help file says its important to change asap once download MODIS package
 
-Sys.setenv(MRT_DATA_DIR = "/Users/Michelle 1/Documents/MODIS/data",
-           MRT_HOME = "/Users/Michelle 1/Documents/MODIS/bin",
-           PATH = "/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/bin:/Library/Frameworks/GDAL.framework/Programs:/Library/TeX/texbin:/opt/X11/bin")
+ Sys.setenv(MRT_DATA_DIR = "/Users/Michelle 1/Documents/MODIS/data",
+            MRT_HOME = "/Users/Michelle 1/Documents/MODIS/bin",
+            PATH = "/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/bin:/Library/Frameworks/GDAL.framework/Programs:/Library/TeX/texbin:/opt/X11/bin")
 
 MODIS::MODISoptions(gdalPath = "/Library/Frameworks/GDAL.framework/Versions/2.2/Programs")
 
@@ -117,11 +118,37 @@ MODIS:::checkTools("GDAL")
 #Now it doesn't recognize the .hdf (= HDF4) format???? Why??? Terminal says it recognizes this file!!!!
 system("gdalinfo --formats")
     #However, running this says it does not accept HDF4 as a format. Arghhhhhhhh
+# Following info from: https://github.com/ropensci/MODIStsp/issues/161
+#library(gdalUtils)
+gdal_setInstallation()
+getOption("gdalUtils_gdalPath")
+#This says the path goes through usr/local/bin/ despite the gdal path set up above
+#But if I type the gdal path from above (ie the one through Library) into terminal...I have hdf4
+#In terminal:  /Library/Frameworks/GDAL.framework/Versions/2.2/Programs/gdal-config --formats
+
+gdal_setInstallation(search_path = "/Library/Frameworks/GDAL.framework/Versions/2.2/Programs/",
+                     rescan = T)
+getOption("gdalUtils_gdalPath")
+#YES!!!!!!! It now found the driver to read HDF4 files. (#44 and #117 for HDF5)
+#BUT...I will need to re-run those two commands every new session or else modify R profile via instructions from
+  #https://gis.stackexchange.com/questions/328081/how-to-make-gdalutils-package-in-r-to-use-gdal-installed-in-osgeos-directory
 
 ###~~~~~~~~~~~~~~~~ GDAL TROUBLESHOOTING SEGWAY OVER ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~###
 
 
-### 3. Download tiles and combine into a single raster for each year
+### 3. Based on troubleshooting, make sure gdal finds the appropriate location...
+Sys.setenv(MRT_DATA_DIR = "/Users/Michelle 1/Documents/MODIS/data",
+           MRT_HOME = "/Users/Michelle 1/Documents/MODIS/bin",
+           PATH = "/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/bin:/Library/Frameworks/GDAL.framework/Programs:/Library/TeX/texbin:/opt/X11/bin")
+
+MODIS::MODISoptions(gdalPath = "/Library/Frameworks/GDAL.framework/Versions/2.2/Programs")
+gdal_setInstallation()
+gdal_setInstallation(search_path = "/Library/Frameworks/GDAL.framework/Versions/2.2/Programs/",
+                     rescan = T)
+getOption("gdalUtils_gdalPath")
+
+
+### 4. Download tiles and combine into a single raster for each year
 tifs <- runGdal(product = "MCD12Q1", 
                 collection = "006", 
                 SDSstring = "01", 
@@ -130,6 +157,6 @@ tifs <- runGdal(product = "MCD12Q1",
                 end = end_year, 
                 outDirPath = "data", 
                 job = "modis",
-                MODISserverOrder = "LPDAAC") %>% 
+                MODISserverOrder = "LPDAAC") %>%  #let's see if curl works better than wget
   pluck("MCD12Q1.006") %>% 
   unlist()
