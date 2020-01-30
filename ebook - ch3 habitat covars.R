@@ -24,7 +24,8 @@ select <- dplyr::select
 projection <- raster::projection
 
 # MODIS login and setup
-MODIS::EarthdataLogin(usr = "username", pwd = "password")
+#MODIS::EarthdataLogin(usr = "username", pwd = "password")
+  #Only need to run once???
 
 ###~~~~ IMPORTANT SIDENOTE: it seems that MODIS has a maskWater() function ~~~~###
   #~where you can keep land only, or land + oceancoastlines and lake shorelines + shallow inland water, and the rest becomes NA~#
@@ -79,27 +80,56 @@ Sys.getenv("PATH")
 
 
 # Let's try resetting paths
+MODISoptions(localArcPath = "/Users/Michelle 1/Documents/Documents/MODIS/Downloads",
+             outDirPath = "/Users/Michelle 1/Documents/R projects/ebird best practices/data")
+        #Changing this because the help file says its important to change asap once download MODIS package
+
 Sys.setenv(MRT_DATA_DIR = "/Users/Michelle 1/Documents/MODIS/data",
            MRT_HOME = "/Users/Michelle 1/Documents/MODIS/bin",
-           PATH = "/Library/Frameworks/GDAL.framework/Versions/2.2/Programs")
+           PATH = "/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/bin:/Library/Frameworks/GDAL.framework/Programs:/Library/TeX/texbin:/opt/X11/bin")
 
 MODIS::MODISoptions(gdalPath = "/Library/Frameworks/GDAL.framework/Versions/2.2/Programs")
 
 MODIS::MODISoptions()
+MODIS:::checkTools("MRT")
+MODIS:::checkTools("GDAL")
   #Seems to have worked???
 
 # Argh...now it needs either wget or curl...but apparently this is easily remeadied
 # Open Terminal (and as long as Homebrew is already install) type:
-# brew install curl
+# curl --version 
+# THis should confirm that curl is already installed, which is what is expected
+# If want/need to install wget type:
+# brew install wget
+
+#Argh. For some reason this still isn't working. Both curl and wget are installed
+  #and I'm still getting errors that sh: can't find them, ie wget: or curl: command not found
+  #I have no idea how to make R find them
+  #need to change the system PATH back to the original version. and change teh gdal one via options. now works.
+
+#Note that MODIS needs an older openssl version available from:
+# https://github.com/tebelorg/Tump/releases/download/v1.0.0/openssl.rb
+#See the stackover flow at https://stackoverflow.com/questions/59006602/dyld-library-not-loaded-usr-local-opt-openssl-lib-libssl-1-0-0-dylib
+#BUT...now my openssl for everything else is not up to date. Hmmm. Not great. Maybe see if Ian can help me 
+  #fix MODIS to accept the new version???
+  #It will run if I uninstall the new version and install the old version..partial fix for the moment
+
+#Now it doesn't recognize the .hdf (= HDF4) format???? Why??? Terminal says it recognizes this file!!!!
+system("gdalinfo --formats")
+    #However, running this says it does not accept HDF4 as a format. Arghhhhhhhh
 
 ###~~~~~~~~~~~~~~~~ GDAL TROUBLESHOOTING SEGWAY OVER ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~###
 
 
 ### 3. Download tiles and combine into a single raster for each year
-tifs <- runGdal(product = "MCD12Q1", collection = "006", SDSstring = "01", 
+tifs <- runGdal(product = "MCD12Q1", 
+                collection = "006", 
+                SDSstring = "01", 
                 extent = bcr %>% st_buffer(dist = 10000), 
-                begin = begin_year, end = end_year, 
-                outDirPath = "data", job = "modis",
+                begin = begin_year, 
+                end = end_year, 
+                outDirPath = "data", 
+                job = "modis",
                 MODISserverOrder = "LPDAAC") %>% 
   pluck("MCD12Q1.006") %>% 
   unlist()
