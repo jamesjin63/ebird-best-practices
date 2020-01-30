@@ -22,6 +22,8 @@ ebird<- read_csv("data/ebd_woothr_june_bcr27_zf.csv")
   # Aparently the eBird people downloaded this fron Natural Earth (https://www.naturalearthdata.com/downloads/)
     #which is a seriously amazing resource for mapping
 
+#TODO: figure how how to download a similar map for my AIV data
+
 # Load and project the gis data
 ebd_map_proj <- st_crs(102003) #Note I change the name compared to the ebook, as otherwise I'm overwriting a package. Bad bad bad
 
