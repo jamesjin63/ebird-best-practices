@@ -46,6 +46,7 @@ bcr <- read_sf("data/gis-data.gpkg", "bcr") %>%
 # get list of tiles required to cover this bcr through MODIS
 tiles <- getTile(bcr)
 tiles@tile
+  #[1] "h10v06" "h10v05" "h11v05"
 
 #TODO: to figure out the extent of the region we want data for, look at the help filt for getTile() from MODIS package
     #Can use a bbox or boundary coordinates (from Extent), which are assumed to be in EPSG:4326
