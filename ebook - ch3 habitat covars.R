@@ -86,8 +86,8 @@ Sys.getenv("PATH")
 #              outDirPath = "/Users/Michelle 1/Documents/R projects/ebird best practices/data")
         #Changing this because the help file says its important to change asap once download MODIS package
 
- Sys.setenv(MRT_DATA_DIR = "/Users/Michelle 1/Documents/MODIS/data",
-            MRT_HOME = "/Users/Michelle 1/Documents/MODIS/bin",
+ Sys.setenv(MRT_DATA_DIR = "/Users/michelle_1/Documents/MODIS/data",
+            MRT_HOME = "/Users/michelle_1/Documents/MODIS/bin",
             PATH = "/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/bin:/Library/Frameworks/GDAL.framework/Programs:/Library/TeX/texbin:/opt/X11/bin")
 
 MODIS::MODISoptions(gdalPath = "/Library/Frameworks/GDAL.framework/Versions/2.2/Programs")
@@ -138,11 +138,12 @@ getOption("gdalUtils_gdalPath")
 
 
 ### 3. Based on troubleshooting, make sure gdal finds the appropriate location...
-Sys.setenv(MRT_DATA_DIR = "/Users/Michelle 1/Documents/MODIS/data",
-           MRT_HOME = "/Users/Michelle 1/Documents/MODIS/bin",
+Sys.setenv(MRT_DATA_DIR = "/Users/michelle_1/Documents/MODIS/data",
+           MRT_HOME = "/Users/michelle_1/Documents/MODIS/bin",
            PATH = "/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/bin:/Library/Frameworks/GDAL.framework/Programs:/Library/TeX/texbin:/opt/X11/bin")
 
-MODIS::MODISoptions(gdalPath = "/Library/Frameworks/GDAL.framework/Versions/2.2/Programs")
+MODIS::MODISoptions(localArcPath = "/Users/Michelle", gdalPath = "/Library/Frameworks/GDAL.framework/Versions/2.2/Programs")
+
 gdal_setInstallation()
 gdal_setInstallation(search_path = "/Library/Frameworks/GDAL.framework/Versions/2.2/Programs/",
                      rescan = T)
@@ -150,6 +151,12 @@ getOption("gdalUtils_gdalPath")
 
 
 ### 4. Download tiles and combine into a single raster for each year
+# don't use this to convert to tif only use to download as there will be
+# errors when converting. Instead use the fancy script after downloading 
+# by
+# - moving the script convert_hdf.sh to the download directory that you 
+#   specified above (i.e. localArcPath)
+# - running the script in the terminal by using the command ./convert_hdf.sh
 tifs <- runGdal(product = "MCD12Q1", 
                 collection = "006", 
                 SDSstring = "01", 
@@ -161,3 +168,6 @@ tifs <- runGdal(product = "MCD12Q1",
                 MODISserverOrder = "LPDAAC") %>%  #let's see if curl works better than wget
   pluck("MCD12Q1.006") %>% 
   unlist()
+
+
+
